@@ -58,9 +58,11 @@ scroller.setFooterView(footer);
 scroller.setInterpolator(interpolator);
 ```
 
-### Demo
+### demo APK
 
-### demo manage screen
+[Download APK](https://github.com/coderkiss/BounceScroller/releases/download/v1.0/BounceDemo.apk)
+
+### demo GIF
 ![](http://ww1.sinaimg.cn/large/70489561gw1ejdsjweaesg208c0ephdu.gif)
 
 ===
