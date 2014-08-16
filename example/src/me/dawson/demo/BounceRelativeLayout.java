@@ -14,9 +14,11 @@ import android.widget.TextView;
 
 public class BounceRelativeLayout extends Activity {
 
-	private BounceScroller pullContainer;
+	private BounceScroller scroller;
 	private Button btListView;
 	private Button btTextView;
+
+	private TextView tvOffset;
 
 	private OnClickListener clickListener = new OnClickListener() {
 
@@ -45,10 +47,10 @@ public class BounceRelativeLayout extends Activity {
 		super.onCreate(bundle);
 		setContentView(R.layout.bounce_relativelayout);
 
-		pullContainer = (BounceScroller) findViewById(R.id.pc_root);
-		pullContainer.setListener(pullListener);
-		pullContainer.setHeaderPullable(true);
-		pullContainer.setFooterPullable(true);
+		scroller = (BounceScroller) findViewById(R.id.pc_root);
+		scroller.setListener(bl);
+		scroller.ifHeaderBounce(true);
+		scroller.ifFooterBounce(true);
 		setHeaderView();
 		setFooterView();
 
@@ -56,6 +58,8 @@ public class BounceRelativeLayout extends Activity {
 		btListView.setOnClickListener(clickListener);
 		btTextView = (Button) findViewById(R.id.bt_textview);
 		btTextView.setOnClickListener(clickListener);
+
+		tvOffset = (TextView) findViewById(R.id.tv_offset);
 	}
 
 	public void setHeaderView() {
@@ -65,7 +69,7 @@ public class BounceRelativeLayout extends Activity {
 		header.setBackgroundColor(getResources().getColor(R.color.grey_3));
 		header.setTextColor(getResources().getColor(R.color.white));
 		header.setGravity(Gravity.CENTER);
-		pullContainer.setHeaderView(header);
+		scroller.setHeaderView(header);
 	}
 
 	public void setFooterView() {
@@ -75,20 +79,26 @@ public class BounceRelativeLayout extends Activity {
 		footer.setBackgroundColor(getResources().getColor(R.color.grey_3));
 		footer.setTextColor(getResources().getColor(R.color.white));
 		footer.setGravity(Gravity.CENTER);
-		pullContainer.setFooterView(footer);
+		scroller.setFooterView(footer);
 	}
 
-	private BounceListener pullListener = new BounceListener() {
+	private BounceListener bl = new BounceListener() {
 		@Override
 		public void onState(boolean header, State state) {
 			if (state == State.STATE_FIT_EXTRAS) {
-				pullContainer.fitContent();
+				scroller.postDelayed(new Runnable() {
+					@Override
+					public void run() {
+						scroller.fitContent();
+					}
+				}, 1000);
 			}
 		}
 
 		@Override
 		public void onOffset(boolean header, int offset) {
-
+			String position = header ? "header" : "footer";
+			tvOffset.setText(position + " offset " + offset);
 		}
 	};
 }

@@ -1,5 +1,10 @@
 package me.dawson.bounce;
 
+import android.animation.Animator;
+import android.animation.Animator.AnimatorListener;
+import android.animation.TimeInterpolator;
+import android.animation.ValueAnimator;
+import android.animation.ValueAnimator.AnimatorUpdateListener;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Rect;
@@ -8,9 +13,9 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.AdapterView;
 import android.widget.RelativeLayout;
-import android.widget.Scroller;
 
 public class BounceScroller extends RelativeLayout {
 	public static final String TAG = "BounceScroller";
@@ -22,7 +27,7 @@ public class BounceScroller extends RelativeLayout {
 	};
 
 	protected State mState = State.STATE_FIT_CONTENT;
-	private Flinger mFlinger = new Flinger();;
+	private Bouncer mBouncer = new Bouncer();
 	private BounceListener mListener;
 	private View mContentView;
 
@@ -40,10 +45,12 @@ public class BounceScroller extends RelativeLayout {
 	private boolean pullingHeader;
 	private boolean pullingFooter;
 
-	private boolean headerPullable;
-	private boolean footerPullable;
+	private boolean headerBounce;
+	private boolean footerBounce;
 
 	private View mTargetView;
+	private TimeInterpolator mInterpolator;
+	private long mTimeBase = 0;
 
 	public BounceScroller(Context context) {
 		super(context);
@@ -56,9 +63,8 @@ public class BounceScroller extends RelativeLayout {
 	protected void onFinishInflate() {
 		super.onFinishInflate();
 		mContentView = getChildAt(0);
+		mInterpolator = new DecelerateInterpolator();
 	}
-
-	private long mTimeBase = 0;
 
 	@Override
 	public boolean dispatchTouchEvent(MotionEvent event) {
@@ -87,6 +93,9 @@ public class BounceScroller extends RelativeLayout {
 			mTargetView = null;
 			return true;
 		} else if (action == MotionEvent.ACTION_DOWN) {
+			// cancel bounce if exists
+			mBouncer.cancel();
+
 			mTargetView = getTargetView(mContentView, event);
 			mTimeBase = 0;
 		} else if (action == MotionEvent.ACTION_MOVE) {
@@ -112,7 +121,6 @@ public class BounceScroller extends RelativeLayout {
 				overScrolled = false;
 			} else {
 				int targetTop = getViewTop(mTargetView);
-				Log.d(TAG, "mTargetView " + mTargetView);
 				int viewOffset = targetTop - mLastTargetTop;
 				Log.d(TAG, "targetTop " + targetTop + " viewOffset "
 						+ viewOffset + " eventOffset " + eventOffset
@@ -152,7 +160,7 @@ public class BounceScroller extends RelativeLayout {
 	}
 
 	private boolean takeTouchEvent(MotionEvent event) {
-		if (!headerPullable && !footerPullable) {
+		if (!headerBounce && !footerBounce) {
 			return false;
 		}
 
@@ -165,19 +173,17 @@ public class BounceScroller extends RelativeLayout {
 				int offset = contentTop;
 				if (mHeaderView != null && offset > mHeaderHeight / 2) {
 					offset = offset - mHeaderHeight;
-					mFlinger.recover(offset);
-					setState(State.STATE_FIT_EXTRAS, true);
+					mBouncer.recover(true, offset, State.STATE_FIT_EXTRAS);
 				} else {
-					mFlinger.recover(offset);
+					mBouncer.recover(true, offset, State.STATE_FIT_CONTENT);
 				}
 			} else if (contentTop < 0) {
 				int offset = mContentView.getBottom() - getBottom();
 				if (mFooterView != null && (offset + mFooterHeight / 2) < 0) {
 					offset = offset + mFooterHeight;
-					mFlinger.recover(offset);
-					setState(State.STATE_FIT_EXTRAS, false);
+					mBouncer.recover(false, offset, State.STATE_FIT_EXTRAS);
 				} else {
-					mFlinger.recover(offset);
+					mBouncer.recover(false, offset, State.STATE_FIT_CONTENT);
 				}
 			}
 		} else if (action == MotionEvent.ACTION_MOVE) {
@@ -185,11 +191,11 @@ public class BounceScroller extends RelativeLayout {
 			offset = offset / 2;
 			boolean handled = false;
 
-			if (headerPullable && !handled && contentTop >= 0 && !pullingFooter) {
+			if (headerBounce && !handled && contentTop >= 0 && !pullingFooter) {
 				handled |= pullHeader(offset);
 			}
 
-			if (footerPullable && !handled && contentTop <= 0 && !pullingHeader) {
+			if (footerBounce && !handled && contentTop <= 0 && !pullingHeader) {
 				handled |= pullFooter(offset);
 			}
 			return handled;
@@ -197,7 +203,7 @@ public class BounceScroller extends RelativeLayout {
 		return false;
 	}
 
-	private void setState(State newState, boolean header) {
+	private void setState(boolean header, State newState) {
 		String position = header ? "header" : "footer";
 
 		if (newState == mState) {
@@ -233,24 +239,20 @@ public class BounceScroller extends RelativeLayout {
 			nextTop = 0;
 			pullingHeader = false;
 			if (mState != State.STATE_FIT_CONTENT) {
-				setState(State.STATE_FIT_CONTENT, true);
+				setState(true, State.STATE_FIT_CONTENT);
 			}
 		} else if (nextTop > 0 && nextTop <= mHeaderHeight) {
 			if ((mState != State.STATE_SHOW)) {
-				setState(State.STATE_SHOW, true);
+				setState(true, State.STATE_SHOW);
 			}
 		} else if (nextTop > mHeaderHeight) {
 			if (mState != State.STATE_OVER) {
-				setState(State.STATE_OVER, true);
+				setState(true, State.STATE_OVER);
 			}
 		}
 
 		Log.d(TAG, "pullHeader " + offset + " nextTop " + nextTop);
 		offsetContent(offset);
-
-		if (mListener != null) {
-			mListener.onOffset(true, nextTop);
-		}
 		return true;
 	}
 
@@ -273,53 +275,96 @@ public class BounceScroller extends RelativeLayout {
 			nextBottom = conBottom;
 			pullingFooter = false;
 			if (mState != State.STATE_FIT_CONTENT) {
-				setState(State.STATE_FIT_CONTENT, false);
+				setState(false, State.STATE_FIT_CONTENT);
 			}
 		} else if (nextBottom < conBottom
 				&& nextBottom >= (conBottom - mFooterHeight)) {
 			if ((mState != State.STATE_SHOW)) {
-				setState(State.STATE_SHOW, false);
+				setState(false, State.STATE_SHOW);
 			}
 		} else if (nextBottom < (conBottom - mFooterHeight)) {
 			if (mState != State.STATE_OVER) {
-				setState(State.STATE_OVER, false);
+				setState(false, State.STATE_OVER);
 			}
 		}
 
 		Log.d(TAG, "pullFooter " + offset + " nextBottom " + nextBottom);
 		offsetContent(offset);
-
-		if (mListener != null) {
-			mListener.onOffset(false, nextBottom - conBottom);
-		}
 		return true;
 	}
 
-	private class Flinger implements Runnable {
-		private Scroller scroller;
-		private int lastY;
+	private class Bouncer implements AnimatorUpdateListener, AnimatorListener {
+		private ValueAnimator mAnimator;
+		private int mLastOffset;
+		private boolean isHeader;
+		private State mTargetState;
+		private boolean mCanceled;
 
-		public Flinger() {
-			scroller = new Scroller(getContext());
+		public void recover(boolean header, int offset, State state) {
+			cancel();
+			Log.d(TAG, "recover offset " + offset);
+			mCanceled = false;
+			isHeader = header;
+			mTargetState = state;
+			mAnimator = new ValueAnimator();
+			mAnimator.setIntValues(0, offset);
+			mLastOffset = 0;
+			mAnimator.setDuration(500);
+			mAnimator.setRepeatCount(0);
+			if (mInterpolator == null) {
+				mInterpolator = new DecelerateInterpolator();
+			}
+			mAnimator.setInterpolator(mInterpolator);
+			mAnimator.addListener(this);
+			mAnimator.addUpdateListener(this);
+			mAnimator.start();
+		}
+
+		public void cancel() {
+			if (mAnimator != null && mAnimator.isRunning()) {
+				mAnimator.cancel();
+			}
+			mAnimator = null;
 		}
 
 		@Override
-		public void run() {
-			boolean offset = scroller.computeScrollOffset();
-			if (offset) {
-				offsetContent(lastY - scroller.getCurrY());
-				lastY = scroller.getCurrY();
-				post(this);
-			} else {
-				removeCallbacks(this);
+		public void onAnimationUpdate(ValueAnimator va) {
+			int currentOffset = (Integer) va.getAnimatedValue();
+			int delta = mLastOffset - currentOffset;
+			Log.d(TAG, "recover delta " + delta + " currentOffset "
+					+ currentOffset);
+			offsetContent(delta);
+			mLastOffset = currentOffset;
+
+			if (mListener != null) {
+				int contentOffset = mContentView.getTop();
+				mListener.onOffset(isHeader, contentOffset);
 			}
 		}
 
-		public void recover(int offset) {
-			removeCallbacks(this);
-			lastY = 0;
-			scroller.startScroll(0, 0, 0, offset, DEFALUT_DURATION);
-			post(this);
+		@Override
+		public void onAnimationStart(Animator animation) {
+
+		}
+
+		@Override
+		public void onAnimationEnd(Animator animation) {
+			Log.d(TAG, "onAnimationEnd");
+			mAnimator = null;
+			if (!mCanceled) {
+				setState(isHeader, mTargetState);
+			}
+		}
+
+		@Override
+		public void onAnimationCancel(Animator animation) {
+			Log.d(TAG, "onAnimationCancel");
+			mCanceled = true;
+		}
+
+		@Override
+		public void onAnimationRepeat(Animator animation) {
+
 		}
 	}
 
@@ -359,6 +404,12 @@ public class BounceScroller extends RelativeLayout {
 			mFooterView.offsetTopAndBottom(offset);
 		}
 
+		if (mListener != null) {
+			int contentOffset = mContentView.getTop();
+			boolean header = contentOffset > 0;
+			mListener.onOffset(header, contentOffset);
+		}
+
 		invalidate();
 		return true;
 	}
@@ -374,17 +425,20 @@ public class BounceScroller extends RelativeLayout {
 
 		int offset = mContentView.getTop();
 		if (offset != 0) {
-			mFlinger.recover(offset);
+			boolean header = true;
+			if (offset < 0) {
+				header = false;
+			}
+			mBouncer.recover(header, offset, State.STATE_FIT_CONTENT);
 		}
-		mState = State.STATE_FIT_CONTENT;
 	}
 
-	public void setHeaderPullable(boolean pullable) {
-		this.headerPullable = pullable;
+	public void ifHeaderBounce(boolean bounce) {
+		this.headerBounce = bounce;
 	}
 
-	public void setFooterPullable(boolean pullable) {
-		this.footerPullable = pullable;
+	public void ifFooterBounce(boolean bounce) {
+		this.footerBounce = bounce;
 	}
 
 	public void setHeaderView(View view) {
@@ -430,7 +484,11 @@ public class BounceScroller extends RelativeLayout {
 	}
 
 	public void setListener(BounceListener listener) {
-		mListener = listener;
+		this.mListener = listener;
+	}
+
+	public void setInterpolator(TimeInterpolator interpolator) {
+		this.mInterpolator = interpolator;
 	}
 
 	private View getTargetView(View target, MotionEvent event) {

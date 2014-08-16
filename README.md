@@ -36,12 +36,26 @@ Just as below code, only need to make BounceScroller as the wrapper.
 Set scroller features
 
 ```
+// get scroller view
 scroller = (BounceScroller) findViewById(R.id.pc_root);
-scroller.setListener(pullListener);
-scroller.setHeaderPullable(true);
-scroller.setFooterPullable(true);
+
+// set bounce listener
+scroller.setListener(bounceListener);
+
+// set if header can bounce
+scroller.ifHeaderBounce(true);
+
+// set if footer can bounce
+scroller.ifFooterBounce(true);
+
+// set header view
 scroller.setHeaderView(header);
+
+// set footer view
 scroller.setFooterView(footer);
+
+// set recover content interpolator
+scroller.setInterpolator(interpolator);
 ```
 
 ### Demo

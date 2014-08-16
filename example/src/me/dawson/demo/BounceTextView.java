@@ -26,9 +26,9 @@ public class BounceTextView extends Activity {
 		setContentView(R.layout.bounce_textview);
 
 		scroller = (BounceScroller) findViewById(R.id.pc_root);
-		scroller.setListener(pullListener);
-		scroller.setHeaderPullable(true);
-		scroller.setFooterPullable(true);
+		scroller.setListener(bl);
+		scroller.ifHeaderBounce(true);
+		scroller.ifFooterBounce(true);
 		// setHeaderView();
 		// setFooterView();
 
@@ -56,11 +56,16 @@ public class BounceTextView extends Activity {
 		scroller.setFooterView(footer);
 	}
 
-	private BounceListener pullListener = new BounceListener() {
+	private BounceListener bl = new BounceListener() {
 		@Override
 		public void onState(boolean header, State state) {
-			if (state == State.STATE_FIT_CONTENT) {
-				scroller.fitContent();
+			if (state == State.STATE_FIT_EXTRAS) {
+				scroller.postDelayed(new Runnable() {
+					@Override
+					public void run() {
+						scroller.fitContent();
+					}
+				}, 1200);
 			}
 		}
 

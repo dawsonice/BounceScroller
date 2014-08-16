@@ -14,7 +14,7 @@ import android.widget.TextView;
 
 public class BounceListView extends Activity {
 
-	private BounceScroller pullContainer;
+	private BounceScroller scroller;
 	private ListView lvInfo;
 
 	private TextView tvHeader;
@@ -53,10 +53,10 @@ public class BounceListView extends Activity {
 		super.onCreate(bundle);
 		setContentView(R.layout.bounce_listview);
 
-		pullContainer = (BounceScroller) findViewById(R.id.pc_root);
-		pullContainer.setListener(pullListener);
-		pullContainer.setHeaderPullable(true);
-		pullContainer.setFooterPullable(true);
+		scroller = (BounceScroller) findViewById(R.id.pc_root);
+		scroller.setListener(bl);
+		scroller.ifHeaderBounce(true);
+		scroller.ifFooterBounce(true);
 		setHeaderView();
 		setFooterView();
 
@@ -71,7 +71,7 @@ public class BounceListView extends Activity {
 		tvHeader.setBackgroundColor(getResources().getColor(R.color.grey_3));
 		tvHeader.setTextColor(getResources().getColor(R.color.white));
 		tvHeader.setGravity(Gravity.CENTER);
-		pullContainer.setHeaderView(tvHeader);
+		scroller.setHeaderView(tvHeader);
 	}
 
 	public void setFooterView() {
@@ -81,10 +81,10 @@ public class BounceListView extends Activity {
 		tvFooter.setBackgroundColor(getResources().getColor(R.color.grey_3));
 		tvFooter.setTextColor(getResources().getColor(R.color.white));
 		tvFooter.setGravity(Gravity.CENTER);
-		pullContainer.setFooterView(tvFooter);
+		scroller.setFooterView(tvFooter);
 	}
 
-	private BounceListener pullListener = new BounceListener() {
+	private BounceListener bl = new BounceListener() {
 		@Override
 		public void onState(boolean header, State state) {
 			if (header) {
@@ -93,12 +93,12 @@ public class BounceListView extends Activity {
 				} else if (state == State.STATE_OVER) {
 					tvHeader.setText("Pullable Header Over");
 				} else if (state == State.STATE_FIT_EXTRAS) {
-					pullContainer.postDelayed(new Runnable() {
+					scroller.postDelayed(new Runnable() {
 						@Override
 						public void run() {
-							pullContainer.fitContent();
+							scroller.fitContent();
 						}
-					}, 1200);
+					}, 800);
 				}
 			}
 		}
