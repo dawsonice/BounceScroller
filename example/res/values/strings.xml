@@ -1,0 +1,7 @@
+<resources>
+
+    <string name="app_name">BounceDemo</string>
+    <string name="pull_listview">Pullable ListView</string>
+    <string name="pull_textview">Pullable TextView</string>
+
+</resources>

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<me.dawson.bounce.BounceScroller xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/pc_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/blue" >
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" >
+
+        <ImageView
+            android:id="@+id/iv_title"
+            android:layout_width="fill_parent"
+            android:layout_height="120dp"
+            android:layout_alignParentTop="true"
+            android:background="@color/grey"
+            android:contentDescription="@string/app_name"
+            android:padding="10dp"
+            android:scaleType="fitXY"
+            android:src="@drawable/image2" />
+
+        <ListView
+            android:id="@+id/lv_info"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_above="@+id/tv_info"
+            android:layout_below="@+id/iv_title"
+            android:layout_toLeftOf="@+id/tv_summary"
+            android:background="@color/grey_4" />
+
+        <TextView
+            android:id="@+id/tv_summary"
+            android:layout_width="120dp"
+            android:layout_height="fill_parent"
+            android:layout_above="@+id/tv_info"
+            android:layout_alignParentRight="true"
+            android:layout_below="@+id/iv_title"
+            android:background="@color/grey_3"
+            android:gravity="center"
+            android:text="@string/app_name"
+            android:textColor="@color/white" />
+
+        <TextView
+            android:id="@+id/tv_info"
+            android:layout_width="fill_parent"
+            android:layout_height="120dp"
+            android:layout_alignParentBottom="true"
+            android:background="@drawable/image1"
+            android:gravity="center"
+            android:text="@string/app_name"
+            android:textColor="@color/white" />
+    </RelativeLayout>
+
+</me.dawson.bounce.BounceScroller>
