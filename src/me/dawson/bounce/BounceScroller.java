@@ -48,6 +48,8 @@ public class BounceScroller extends RelativeLayout {
 	private boolean headerBounce;
 	private boolean footerBounce;
 
+	private int remainOffset;
+
 	private View mTargetView;
 	private TimeInterpolator mInterpolator;
 	private long mTimeBase = 0;
@@ -64,6 +66,7 @@ public class BounceScroller extends RelativeLayout {
 		super.onFinishInflate();
 		mContentView = getChildAt(0);
 		mInterpolator = new DecelerateInterpolator();
+		remainOffset = 0;
 	}
 
 	@Override
@@ -127,6 +130,7 @@ public class BounceScroller extends RelativeLayout {
 						+ " mTimeBase " + mTimeBase);
 				if (eventOffset != 0 && viewOffset == 0 && !overScrolled) {
 					long currentTime = System.currentTimeMillis();
+					remainOffset += eventOffset;
 					if (mTimeBase == 0) {
 						mTimeBase = currentTime;
 					} else if (currentTime - mTimeBase > 50) {
@@ -135,6 +139,12 @@ public class BounceScroller extends RelativeLayout {
 					}
 				} else if (eventOffset != 0 && viewOffset != 0) {
 					mTimeBase = 0;
+				}
+
+				if (remainOffset != 0 && overScrolled) {
+					Log.d(TAG, "do remainOffset " + remainOffset);
+					onOffset(remainOffset);
+					remainOffset = 0;
 				}
 			}
 		}
@@ -188,19 +198,23 @@ public class BounceScroller extends RelativeLayout {
 			}
 		} else if (action == MotionEvent.ACTION_MOVE) {
 			int offset = (int) (event.getY() - mLastEventY);
-			offset = offset / 2;
-			boolean handled = false;
-
-			if (headerBounce && !handled && contentTop >= 0 && !pullingFooter) {
-				handled |= pullHeader(offset);
-			}
-
-			if (footerBounce && !handled && contentTop <= 0 && !pullingHeader) {
-				handled |= pullFooter(offset);
-			}
-			return handled;
+			return onOffset(offset);
 		}
 		return false;
+	}
+
+	private boolean onOffset(int offset) {
+		offset = offset / 2;
+		boolean handled = false;
+		int contentTop = mContentView.getTop();
+		if (headerBounce && !handled && contentTop >= 0 && !pullingFooter) {
+			handled |= pullHeader(offset);
+		}
+
+		if (footerBounce && !handled && contentTop <= 0 && !pullingHeader) {
+			handled |= pullFooter(offset);
+		}
+		return handled;
 	}
 
 	private void setState(boolean header, State newState) {
@@ -433,15 +447,17 @@ public class BounceScroller extends RelativeLayout {
 		}
 	}
 
-	public void ifHeaderBounce(boolean bounce) {
+	public BounceScroller setHeaderBounce(boolean bounce) {
 		this.headerBounce = bounce;
+		return this;
 	}
 
-	public void ifFooterBounce(boolean bounce) {
+	public BounceScroller setFooterBounce(boolean bounce) {
 		this.footerBounce = bounce;
+		return this;
 	}
 
-	public void setHeaderView(View view) {
+	public BounceScroller setHeaderView(View view) {
 		if (mHeaderView != null) {
 			removeView(mHeaderView);
 			mHeaderView = null;
@@ -456,13 +472,14 @@ public class BounceScroller extends RelativeLayout {
 					mHeaderHeight);
 			addView(mHeaderView, 0, params);
 		}
+		return this;
 	}
 
 	public View getHeaderView() {
 		return mHeaderView;
 	}
 
-	public void setFooterView(View view) {
+	public BounceScroller setFooterView(View view) {
 		if (mFooterView != null) {
 			removeView(mFooterView);
 			mFooterView = null;
@@ -477,18 +494,21 @@ public class BounceScroller extends RelativeLayout {
 					mHeaderHeight);
 			addView(mFooterView, 0, params);
 		}
+		return this;
 	}
 
 	public View getFooterView() {
 		return mFooterView;
 	}
 
-	public void setListener(BounceListener listener) {
+	public BounceScroller setListener(BounceListener listener) {
 		this.mListener = listener;
+		return this;
 	}
 
-	public void setInterpolator(TimeInterpolator interpolator) {
+	public BounceScroller setInterpolator(TimeInterpolator interpolator) {
 		this.mInterpolator = interpolator;
+		return this;
 	}
 
 	private View getTargetView(View target, MotionEvent event) {

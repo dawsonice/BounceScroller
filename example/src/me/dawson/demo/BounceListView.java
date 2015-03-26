@@ -54,9 +54,7 @@ public class BounceListView extends Activity {
 		setContentView(R.layout.bounce_listview);
 
 		scroller = (BounceScroller) findViewById(R.id.pc_root);
-		scroller.setListener(bl);
-		scroller.ifHeaderBounce(true);
-		scroller.ifFooterBounce(true);
+		scroller.setListener(bl).setHeaderBounce(true).setFooterBounce(true);
 		setHeaderView();
 		setFooterView();
 

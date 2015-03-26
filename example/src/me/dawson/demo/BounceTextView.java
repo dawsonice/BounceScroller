@@ -8,6 +8,8 @@ import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.ImageView;
+import android.widget.ImageView.ScaleType;
 import android.widget.TextView;
 
 public class BounceTextView extends Activity {
@@ -27,9 +29,9 @@ public class BounceTextView extends Activity {
 
 		scroller = (BounceScroller) findViewById(R.id.pc_root);
 		scroller.setListener(bl);
-		scroller.ifHeaderBounce(true);
-		scroller.ifFooterBounce(true);
-		// setHeaderView();
+		scroller.setHeaderBounce(true);
+		scroller.setFooterBounce(true);
+		setHeaderView();
 		// setFooterView();
 
 		tvInfo = (TextView) findViewById(R.id.tv_info);
@@ -37,12 +39,9 @@ public class BounceTextView extends Activity {
 	}
 
 	public void setHeaderView() {
-		TextView header = new TextView(BounceTextView.this);
-		header.setPadding(10, 20, 10, 20);
-		header.setText("Pullable Header View");
-		header.setBackgroundColor(getResources().getColor(R.color.grey_3));
-		header.setTextColor(getResources().getColor(R.color.white));
-		header.setGravity(Gravity.CENTER);
+		ImageView header = new ImageView(BounceTextView.this);
+		header.setImageResource(R.drawable.image4);
+		header.setScaleType(ScaleType.FIT_XY);
 		scroller.setHeaderView(header);
 	}
 
