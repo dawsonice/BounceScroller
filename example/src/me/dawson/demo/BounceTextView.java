@@ -27,15 +27,14 @@ public class BounceTextView extends Activity {
 		super.onCreate(bundle);
 		setContentView(R.layout.bounce_textview);
 
-		scroller = (BounceScroller) findViewById(R.id.pc_root);
-		scroller.setListener(bl);
-		scroller.setHeaderBounce(true);
-		scroller.setFooterBounce(true);
-		setHeaderView();
-		// setFooterView();
-
 		tvInfo = (TextView) findViewById(R.id.tv_info);
 		tvInfo.setOnClickListener(onClickListener);
+
+		scroller = new BounceScroller(this);
+		scroller.setListener(bl).enableHeader(true).enableFooter(true);
+		setHeaderView();
+		// setFooterView();
+		scroller.attach(tvInfo);
 	}
 
 	public void setHeaderView() {
@@ -62,7 +61,7 @@ public class BounceTextView extends Activity {
 				scroller.postDelayed(new Runnable() {
 					@Override
 					public void run() {
-						scroller.fitContent();
+						scroller.resetState();
 					}
 				}, 1200);
 			}

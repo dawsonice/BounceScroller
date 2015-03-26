@@ -12,7 +12,7 @@ like bounce scroller effect and can also be used as pull-to-refresh.
 
 ### Usage
 
-Just as below code, only need to make BounceScroller as the wrapper.
+* Make BounceScroller as the wrapper layout.
 
 ```
 <me.dawson.bounce.BounceScroller xmlns:android="http://schemas.android.com/apk/res/android"
@@ -32,6 +32,13 @@ Just as below code, only need to make BounceScroller as the wrapper.
 
 </me.dawson.bounce.BounceScroller>
 ```
+* Attach BounceScroller dynamiclly just at runtime.
+
+```
+scroller = new BounceScroller(context);
+scroller.setListener(bl).enableHeader(true).enableFooter(true);
+scroller.attach(tvInfo);
+```
 
 Set scroller features
 
@@ -43,10 +50,10 @@ scroller = (BounceScroller) findViewById(R.id.pc_root);
 scroller.setListener(bounceListener);
 
 // set if header can bounce
-scroller.ifHeaderBounce(true);
+scroller.enableHeader(true);
 
 // set if footer can bounce
-scroller.ifFooterBounce(true);
+scroller.enableFooter(true);
 
 // set header view
 scroller.setHeaderView(header);
@@ -58,9 +65,9 @@ scroller.setFooterView(footer);
 scroller.setInterpolator(interpolator);
 ```
 
-### demo APK
+### demo apk
 
-[Download APK](https://github.com/coderkiss/BounceScroller/releases/download/v1.0/BounceDemo.apk)
+[download the demo apk](https://github.com/coderkiss/BounceScroller/releases/download/v1.1/BounceDemo.apk)
 
 ### demo GIF
 ![](http://ww1.sinaimg.cn/large/70489561gw1ejdsjweaesg208c0ephdu.gif)

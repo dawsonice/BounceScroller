@@ -3,5 +3,7 @@
     <string name="app_name">BounceDemo</string>
     <string name="pull_listview">Pullable ListView</string>
     <string name="pull_textview">Pullable TextView</string>
+    <string name="bounce_textview">Bounce TextView</string>
+    <string name="bounce_listview">Bounce TextView</string>
 
 </resources>

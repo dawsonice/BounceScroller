@@ -48,7 +48,7 @@ public class BounceRelativeLayout extends Activity {
 		setContentView(R.layout.bounce_relativelayout);
 
 		scroller = (BounceScroller) findViewById(R.id.pc_root);
-		scroller.setListener(bl).setHeaderBounce(true).setFooterBounce(true);
+		scroller.setListener(bl).enableHeader(true).enableFooter(true);
 		setHeaderView();
 		setFooterView();
 
@@ -87,7 +87,7 @@ public class BounceRelativeLayout extends Activity {
 				scroller.postDelayed(new Runnable() {
 					@Override
 					public void run() {
-						scroller.fitContent();
+						scroller.resetState();
 					}
 				}, 1000);
 			}

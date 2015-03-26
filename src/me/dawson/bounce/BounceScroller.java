@@ -55,18 +55,21 @@ public class BounceScroller extends RelativeLayout {
 	private long mTimeBase = 0;
 
 	public BounceScroller(Context context) {
-		super(context);
+		this(context, null);
 	}
 
 	public BounceScroller(Context context, AttributeSet attrs) {
 		super(context, attrs);
+
+		mInterpolator = new DecelerateInterpolator();
+		remainOffset = 0;
 	}
 
 	protected void onFinishInflate() {
 		super.onFinishInflate();
-		mContentView = getChildAt(0);
-		mInterpolator = new DecelerateInterpolator();
-		remainOffset = 0;
+		if (getChildCount() > 0) {
+			mContentView = getChildAt(0);
+		}
 	}
 
 	@Override
@@ -428,7 +431,30 @@ public class BounceScroller extends RelativeLayout {
 		return true;
 	}
 
-	public void fitContent() {
+	public boolean attach(View view) {
+		if (view == null) {
+			return false;
+		}
+		ViewGroup parent = (ViewGroup) view.getParent();
+		ViewGroup.LayoutParams params = parent.getLayoutParams();
+		int index = parent.indexOfChild(view);
+		parent.removeView(view);
+
+		parent.addView(this, index, params);
+
+		index = 0;
+		if (mHeaderView != null) {
+			index = 1;
+		}
+		params = new ViewGroup.LayoutParams(
+				ViewGroup.LayoutParams.MATCH_PARENT,
+				ViewGroup.LayoutParams.MATCH_PARENT);
+		addView(view, index, params);
+		this.mContentView = view;
+		return true;
+	}
+
+	public void resetState() {
 		if (mState != State.STATE_FIT_EXTRAS) {
 			return;
 		}
@@ -447,12 +473,12 @@ public class BounceScroller extends RelativeLayout {
 		}
 	}
 
-	public BounceScroller setHeaderBounce(boolean bounce) {
+	public BounceScroller enableHeader(boolean bounce) {
 		this.headerBounce = bounce;
 		return this;
 	}
 
-	public BounceScroller setFooterBounce(boolean bounce) {
+	public BounceScroller enableFooter(boolean bounce) {
 		this.footerBounce = bounce;
 		return this;
 	}
